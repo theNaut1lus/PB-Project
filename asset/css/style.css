@@ -469,7 +469,7 @@ a.navbar-brand {
 .banner {
     text-align: center;
     color: #fff;
-    background: url(../images/banner.jpg) no-repeat;
+    background: url(../images/banner1.jpg) no-repeat;
     background-attachment: scroll;
     background-position: center center;
     -webkit-background-size: cover;
@@ -823,7 +823,7 @@ iframe {
 
 
 .call-to-action {
-    background: url(../images/parallax/call-to.jpg);
+    background: url(../images/parallax/call-to1.jpg);
     background-attachment: fixed;
     background-size: cover;
     background-position: 50% 90%;
