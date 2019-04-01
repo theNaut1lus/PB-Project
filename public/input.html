@@ -10,14 +10,14 @@
     <main>
         <form class="add-item">
             <div class="item">
-                <label for="input-note">Item</label>
+                <label for="input-note">Name</label>
                 <input type="text" name="note" id="input-note" required autofocus>
             </div>
             <div class="amount">
-                <label for="input-amount">Amount</label>
-                <input type="number" name="amount" id="input-amount" required>
+                <label for="input-amount">Designation</label>
+                <input type="text" name="amount" id="input-amount" required>
             </div>
-            <button type="submit">Add item</button>
+            <button type="submit">Add role</button>
         </form>
           
          <div class="items" data-num="0">
@@ -145,24 +145,24 @@
         })
 
         function render (items) {
-        $itemCount.classList.toggle('hide-item-count', items.length === 0)
-        if (items.length === 0) {
-            document.body.setAttribute('data-store-state', 'empty')
-            return
-        }
+            $itemCount.classList.toggle('hide-item-count', items.length === 0)
+            if (items.length === 0) {
+                document.body.setAttribute('data-store-state', 'empty')
+                return
+            }
 
-        document.body.setAttribute('data-store-state', 'not-empty')
-        $itemsList.innerHTML = items
-            .sort(orderByCreatedAt)
-            .map(function (item) {
-            return '<tr data-id="' + item._id + '">' +
+            document.body.setAttribute('data-store-state', 'not-empty')
+            $itemsList.innerHTML = items
+                .sort(orderByCreatedAt)
+                .map(function (item) {
+                    return '<tr data-id="' + item._id + '">' +
                     '<td>' + escapeHtml(item.note) + '</td>' +
                     '<td>' + escapeHtml(item.amount) + '</td>' +
                     '<td><a class="edit" href="#" data-action="edit">Edit</a></td>' +
                     '<td><a href="#" data-action="remove">Delete</a></td>' +
                     '</tr>'
-            }).join('')
-        $itemCount.innerHTML = 'List Count: ' + items.length
+                }).join('')
+            $itemCount.innerHTML = 'List Count: ' + items.length
         }
 
         function orderByCreatedAt (item1, item2) {
