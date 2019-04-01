@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Employee data entry Portal</title>
+</head>
+<body>
+    <main>
+        <form class="add-item">
+            <div class="item">
+                <label for="input-note">Item</label>
+                <input type="text" name="note" id="input-note" required autofocus>
+            </div>
+            <div class="amount">
+                <label for="input-amount">Amount</label>
+                <input type="number" name="amount" id="input-amount" required>
+            </div>
+            <button type="submit">Add item</button>
+        </form>
+          
+         <div class="items" data-num="0">
+            <table>
+                <tbody class="placeholder" data-hide-if="store-not-empty">
+                    <tr>
+                        <td colspan="4">
+                          Nothing tracked yet, add something!
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody class="list" data-hide-if="store-empty"></tbody>
+            </table>
+            <button id="clear-items" class="warning" data-action="clear" data-hide-if="store-empty">
+                Clear tracked items
+            </button>
+            <p class="item-count"></p>
+        </div>
+    </main>
+
+
+    <script src="/hoodie/client.js"></script>
+    <script>
+        var $addItemForm = document.querySelector('form.add-item')
+        var $itemsList = document.querySelector('.items .list')
+        var $clearButton = document.querySelector('[data-action="clear"]')
+        var $itemCount = document.querySelector('.item-count')
+
+        /**
+         * With hoodie we're storing our data locally and it will stick around next time you reload.
+         * This means each time the page loads we need to find any previous notes that we have stored.
+         */
+        function loadAndRenderItems () {
+        hoodie.store.findAll().then(render)
+        }
+
+        /* render items initially on page load */
+        loadAndRenderItems()
+
+        /**
+         * Anytime there is a data change we reload and render the list of items
+         */
+        hoodie.store.on('change', loadAndRenderItems)
+        hoodie.store.on('clear', function () {
+        render([])
+        })
+
+        $clearButton.addEventListener('click', function () {
+        hoodie.store.removeAll()
+        loadAndRenderItems()
+        })
+
+        /**
+         * If you submit a form it will emit a submit event.
+         * This is better than listening for a click on the submit button for example.
+         * It will catch you submitting via pressing 'enter' on a keyboard or something like 'Go' on a mobile keyboard.
+         * More info on form accessibility: http://webaim.org/techniques/forms/
+         **/
+        $addItemForm.addEventListener('submit', function (event) {
+        /**
+         * By default a form will submit your form data to the page itself,
+         * this is useful if you're doing a traditional web app but we want to handle this in JavaScript instead.
+         * if we're overriding this behaviour in JavaScript we need to grab the event
+         * and prevent it from doing it's default behaviour.
+         **/
+        event.preventDefault()
+
+        // Get values from inputs, then clear the form
+        var amount = $addItemForm.querySelector('[name=amount]').value
+        var note = $addItemForm.querySelector('[name=note]').value
+        note = note.trim()
+        $addItemForm.reset()
+
+        hoodie.store.add({
+            amount: amount,
+            note: note
+        })
+        })
+
+        /**
+         * As items are dynamically added an removed, we cannot add event listeners
+         * to the buttons. Instead, we register a click event on the items table and
+         * then check if one of the buttons was clicked.
+         * See: https://davidwalsh.name/event-delegate
+         */
+        $itemsList.addEventListener('click', function (event) {
+        event.preventDefault()
+
+        var action = event.target.dataset.action
+        if (!action) {
+            return
+        }
+
+        var row = event.target.parentNode.parentNode
+        var id = row.dataset.id
+        var amount = row.firstChild.nextSibling.textContent
+        var note = row.firstChild.textContent
+
+        switch (action) {
+            case 'edit':
+            row.innerHTML = '<td><input type="text" name="note" value="' + escapeHtml(note) + '" data-reset-value="' + escapeHtml(note) + '"></td>' +
+                            '<td><input type="number" name="amount" value="' + escapeHtml(amount) + '" data-reset-value="' + escapeHtml(amount) + '"></td>' +
+                            '<td><a href="#" data-action="update">Save</a></td><td><a href="#" data-action="cancel">Cancel</a></td>'
+            // Only allow one item on list to be edited.   Remove edit option on other items in list while editing
+            var elements = document.getElementsByClassName('edit')
+            while (elements.length > 0) {
+                elements[0].remove('edit')
+            }
+            break
+            case 'cancel':
+            loadAndRenderItems()
+            break
+
+            case 'remove':
+            hoodie.store.remove(id)
+            break
+            case 'update':
+            amount = row.querySelector('input[name=amount]').value
+            note = row.querySelector('input[name=note]').value
+            hoodie.store.update(id, {
+                amount: amount,
+                note: note
+            })
+        }
+        })
+
+        function render (items) {
+        $itemCount.classList.toggle('hide-item-count', items.length === 0)
+        if (items.length === 0) {
+            document.body.setAttribute('data-store-state', 'empty')
+            return
+        }
+
+        document.body.setAttribute('data-store-state', 'not-empty')
+        $itemsList.innerHTML = items
+            .sort(orderByCreatedAt)
+            .map(function (item) {
+            return '<tr data-id="' + item._id + '">' +
+                    '<td>' + escapeHtml(item.note) + '</td>' +
+                    '<td>' + escapeHtml(item.amount) + '</td>' +
+                    '<td><a class="edit" href="#" data-action="edit">Edit</a></td>' +
+                    '<td><a href="#" data-action="remove">Delete</a></td>' +
+                    '</tr>'
+            }).join('')
+        $itemCount.innerHTML = 'List Count: ' + items.length
+        }
+
+        function orderByCreatedAt (item1, item2) {
+        var timeA = +new Date(item1.hoodie.createdAt)
+        var timeB = +new Date(item2.hoodie.createdAt)
+        return timeA < timeB ? 1 : -1
+        }
+
+        function escapeHtml (unsafeHtml) {
+        var text = document.createTextNode(unsafeHtml)
+        var div = document.createElement('div')
+        div.appendChild(text)
+        return div.innerHTML
+        }
+
+
+    </script>
+</body>
+</html>

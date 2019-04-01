@@ -1,0 +1,24 @@
+{
+  "name": "PB-Project",
+  "version": "1.0.0",
+  "description": "<hr>",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "hoodie"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/co16353sidak/PB-Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/co16353sidak/PB-Project/issues"
+  },
+  "homepage": "https://github.com/co16353sidak/PB-Project#readme",
+  "dependencies": {
+    "hoodie": "^28.2.6"
+  }
+}
